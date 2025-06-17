@@ -457,55 +457,14 @@ const Dashboard = () => {
     
     // Teslim edildi yüzdesi hesapla (daire içindeki metin için)
     const teslimYuzdesi = hesaplaYuzde(odemeEvrakiData[0]?.value || 0);
-    
-    return (
+      return (
       <div className="hidden md:flex border rounded-lg bg-white shadow-sm h-auto items-center gap-3 px-3 py-2">
-        {/* Sol taraf: Pasta grafik */}
-        <div className="w-16 h-16 lg:w-20 lg:h-20 relative min-w-[64px] min-h-[64px]">
-          {/* Kesin boyutlar belirleyerek grafiğin görünmesini sağlayalım */}
-          <PieChart width={64} height={64} margin={{ top: 0, right: 0, bottom: 0, left: 0 }}>
-            <defs>
-              <filter id="shadow" height="200%" width="200%" x="-50%" y="-50%">
-                <feDropShadow dx="0" dy="0" stdDeviation="2" floodColor="#00000033" />
-              </filter>
-              {/* Gradient tanımları */}
-              <linearGradient id="colorTeslimEdildi" x1="0" y1="0" x2="0" y2="1">
-                <stop offset="0%" stopColor="#34d399" />
-                <stop offset="100%" stopColor="#10b981" />
-              </linearGradient>
-              <linearGradient id="colorTeslimEdilmedi" x1="0" y1="0" x2="0" y2="1">
-                <stop offset="0%" stopColor="#fb7185" />
-                <stop offset="100%" stopColor="#f43f5e" />
-              </linearGradient>
-            </defs>
-            <Pie
-              data={odemeEvrakiData}
-              cx="50%"
-              cy="50%"
-              labelLine={false}
-              innerRadius="58%"
-              outerRadius="90%"
-              paddingAngle={3}
-              dataKey="value"
-              animationDuration={1200}
-              animationBegin={200}
-              animationEasing="ease-out"
-              filter="url(#shadow)"
-            >
-              {odemeEvrakiData.map((entry, index) => (
-                <Cell 
-                  key={`cell-${index}`} 
-                  fill={index === 0 ? 'url(#colorTeslimEdildi)' : 'url(#colorTeslimEdilmedi)'} 
-                  stroke="#fff"
-                  strokeWidth={1}
-                />
-              ))}
-            </Pie>
-          </PieChart>
-          
-          {/* Orta kısımdaki yüzde göstergesi */}
-          <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 text-center">
-            <div className="text-sm lg:text-base font-bold text-gray-800">{teslimYuzdesi}%</div>
+        {/* Sol taraf: Durum göstergesi */}
+        <div className="w-16 h-16 lg:w-20 lg:h-20 relative min-w-[64px] min-h-[64px] flex items-center justify-center">
+          {/* Basit yüzde göstergesi */}
+          <div className="text-center">
+            <div className="text-lg lg:text-xl font-bold text-gray-800">{teslimYuzdesi}%</div>
+            <div className="text-xs text-gray-600">Teslim</div>
           </div>
         </div>
         

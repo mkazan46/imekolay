@@ -155,12 +155,10 @@ interface TeacherFormData {
 // İşletme Kartı Bileşeni
 const BusinessCard = ({ 
   business, 
-  assignedTeacher, 
-  droppableId 
+  assignedTeacher
 }: { 
   business: Business; 
   assignedTeacher?: Teacher; 
-  droppableId: string;
 }) => (
   <DragCard className="mb-4 bg-white shadow-md hover:shadow-lg transition-shadow border border-blue-100">
     <DragCardHeader className="pb-2 bg-blue-50">
@@ -175,49 +173,27 @@ const BusinessCard = ({
       </DragCardDescription>
     </DragCardHeader>
     <DragCardContent>
-      <Droppable droppableId={droppableId}>
-        {(provided, snapshot) => (
-          <div
-            ref={provided.innerRef}
-            {...provided.droppableProps}
-            className={`min-h-[80px] rounded-md p-2 transition-colors ${
-              snapshot.isDraggingOver ? 'bg-accent' : 'bg-muted/40'
-            }`}
-          >
-            {assignedTeacher ? (
-              <Draggable draggableId={`teacher-${assignedTeacher.id}`} index={0}>
-                {(provided, snapshot) => (
-                  <div
-                    ref={provided.innerRef}
-                    {...provided.draggableProps}
-                    {...provided.dragHandleProps}
-                    className={`p-3 mb-2 rounded-md ${
-                      snapshot.isDragging ? 'bg-accent shadow-lg' : 'bg-card'
-                    }`}
-                  >
-                    <div className="flex justify-between items-center">
-                      <div>
-                        <div className="font-medium text-sm">{assignedTeacher.name}</div>
-                      </div>
-                      <button 
-                        className="text-gray-500 hover:text-red-500 transition-colors focus:outline-none"
-                        title="Atamayı Kaldır"
-                      >
-                        <ArrowRightCircle size={14} />
-                      </button>
-                    </div>
-                  </div>
-                )}
-              </Draggable>
-            ) : (
-              <div className="flex items-center justify-center h-20 text-sm text-muted-foreground">
-                Öğretmen atamak için sürükleyin
+      <div className="min-h-[80px] rounded-md p-2 bg-muted/40">
+        {assignedTeacher ? (
+          <div className="p-3 mb-2 rounded-md bg-card">
+            <div className="flex justify-between items-center">
+              <div>
+                <div className="font-medium text-sm">{assignedTeacher.name}</div>
               </div>
-            )}
-            {provided.placeholder}
+              <button 
+                className="text-gray-500 hover:text-red-500 transition-colors focus:outline-none"
+                title="Atamayı Kaldır"
+              >
+                <ArrowRightCircle size={14} />
+              </button>
+            </div>
+          </div>
+        ) : (
+          <div className="flex items-center justify-center h-20 text-sm text-muted-foreground">
+            Öğretmen ataması yok
           </div>
         )}
-      </Droppable>
+      </div>
     </DragCardContent>
   </DragCard>
 );
