@@ -103,10 +103,9 @@ const NewAdminDashboard = () => {
   const [teachers, setTeachers] = useState<Teacher[]>([]);
   const [businesses, setBusinesses] = useState<Business[]>([]);
   const [governmentSupport, setGovernmentSupport] = useState<DevletDestegi[]>([]);
-  
-  // Form states
+    // Form states
   const [searchTerm, setSearchTerm] = useState('');
-  const [newTeacher, setNewTeacher] = useState({ name: '', email: '', phone: '' });
+  const [newTeacher, setNewTeacher] = useState({ name: '', password: '' });
   const [editingTeacher, setEditingTeacher] = useState<Teacher | null>(null);
   const [showTeacherDialog, setShowTeacherDialog] = useState(false);
 
@@ -149,15 +148,12 @@ const NewAdminDashboard = () => {
       setLoading(false);
     }
   };
-
   // Handle teacher operations
   const handleSaveTeacher = async () => {
     try {
       if (editingTeacher) {
         const { error } = await updateTeacher(editingTeacher.id, {
           name: newTeacher.name,
-          email: newTeacher.email,
-          phone: newTeacher.phone,
         });
         if (error) throw error;
         
@@ -166,7 +162,7 @@ const NewAdminDashboard = () => {
           description: "Öğretmen bilgileri güncellendi.",
         });
       } else {
-        const { error } = await createTeacher(newTeacher.name, newTeacher.email, newTeacher.phone);
+        const { error } = await createTeacher(newTeacher.name, newTeacher.password || 'defaultPassword123');
         if (error) throw error;
         
         toast({
@@ -177,7 +173,7 @@ const NewAdminDashboard = () => {
       
       setShowTeacherDialog(false);
       setEditingTeacher(null);
-      setNewTeacher({ name: '', email: '', phone: '' });
+      setNewTeacher({ name: '', password: '' });
       loadData();
     } catch (error) {
       console.error('Error saving teacher:', error);
@@ -188,8 +184,7 @@ const NewAdminDashboard = () => {
       });
     }
   };
-
-  const handleDeleteTeacher = async (teacherId: number) => {
+  const handleDeleteTeacher = async (teacherId: string) => {
     try {
       const { error } = await deleteTeacher(teacherId);
       if (error) throw error;
@@ -214,11 +209,9 @@ const NewAdminDashboard = () => {
     sessionStorage.removeItem('adminData');
     navigate('/admin-login');
   };
-
   // Filter data based on search
   const filteredTeachers = teachers.filter(teacher =>
-    teacher.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    teacher.email?.toLowerCase().includes(searchTerm.toLowerCase())
+    teacher.name.toLowerCase().includes(searchTerm.toLowerCase())
   );
 
   const filteredBusinesses = businesses.filter(business =>
@@ -493,11 +486,10 @@ const NewAdminDashboard = () => {
                     />
                   </div>
                 </div>
-                <Dialog open={showTeacherDialog} onOpenChange={setShowTeacherDialog}>
-                  <DialogTrigger asChild>
+                <Dialog open={showTeacherDialog} onOpenChange={setShowTeacherDialog}>                  <DialogTrigger asChild>
                     <Button onClick={() => {
                       setEditingTeacher(null);
-                      setNewTeacher({ name: '', email: '', phone: '' });
+                      setNewTeacher({ name: '', password: '' });
                     }}>
                       <Plus className="w-4 h-4 mr-2" />
                       Yeni Öğretmen
@@ -511,8 +503,7 @@ const NewAdminDashboard = () => {
                       <DialogDescription>
                         Öğretmen bilgilerini girin.
                       </DialogDescription>
-                    </DialogHeader>
-                    <div className="space-y-4">
+                    </DialogHeader>                    <div className="space-y-4">
                       <div>
                         <Label htmlFor="name">Ad Soyad</Label>
                         <Input
@@ -523,22 +514,13 @@ const NewAdminDashboard = () => {
                         />
                       </div>
                       <div>
-                        <Label htmlFor="email">E-posta</Label>
+                        <Label htmlFor="password">Şifre</Label>
                         <Input
-                          id="email"
-                          type="email"
-                          value={newTeacher.email}
-                          onChange={(e) => setNewTeacher({ ...newTeacher, email: e.target.value })}
-                          placeholder="ornek@email.com"
-                        />
-                      </div>
-                      <div>
-                        <Label htmlFor="phone">Telefon</Label>
-                        <Input
-                          id="phone"
-                          value={newTeacher.phone}
-                          onChange={(e) => setNewTeacher({ ...newTeacher, phone: e.target.value })}
-                          placeholder="05XX XXX XX XX"
+                          id="password"
+                          type="password"
+                          value={newTeacher.password}
+                          onChange={(e) => setNewTeacher({ ...newTeacher, password: e.target.value })}
+                          placeholder="Şifre"
                         />
                       </div>
                     </div>
@@ -556,19 +538,17 @@ const NewAdminDashboard = () => {
 
               {/* Teachers Table */}
               <Card>
-                <Table>
-                  <TableHeader>
+                <Table>                  <TableHeader>
                     <TableRow>
                       <TableHead>Öğretmen</TableHead>
-                      <TableHead>E-posta</TableHead>
-                      <TableHead>Telefon</TableHead>
+                      <TableHead>ID</TableHead>
+                      <TableHead>Giriş Durumu</TableHead>
                       <TableHead>Atama Durumu</TableHead>
                       <TableHead className="text-right">İşlemler</TableHead>
                     </TableRow>
                   </TableHeader>
                   <TableBody>
-                    {filteredTeachers.map((teacher) => (
-                      <TableRow key={teacher.id}>
+                    {filteredTeachers.map((teacher) => (                      <TableRow key={teacher.id}>
                         <TableCell className="font-medium">
                           <div className="flex items-center space-x-3">
                             <Avatar className="w-8 h-8">
@@ -579,8 +559,12 @@ const NewAdminDashboard = () => {
                             <span>{teacher.name}</span>
                           </div>
                         </TableCell>
-                        <TableCell className="text-gray-600">{teacher.email || '-'}</TableCell>
-                        <TableCell className="text-gray-600">{teacher.phone || '-'}</TableCell>
+                        <TableCell className="text-gray-600">{teacher.id}</TableCell>
+                        <TableCell>
+                          <Badge variant={teacher.is_first_login ? "destructive" : "default"}>
+                            {teacher.is_first_login ? "İlk Giriş" : "Aktif"}
+                          </Badge>
+                        </TableCell>
                         <TableCell>
                           <Badge variant="outline">Atanmış</Badge>
                         </TableCell>
@@ -591,14 +575,12 @@ const NewAdminDashboard = () => {
                                 <MoreHorizontal className="w-4 h-4" />
                               </Button>
                             </DropdownMenuTrigger>
-                            <DropdownMenuContent align="end">
-                              <DropdownMenuItem
+                            <DropdownMenuContent align="end">                              <DropdownMenuItem
                                 onClick={() => {
                                   setEditingTeacher(teacher);
                                   setNewTeacher({
                                     name: teacher.name,
-                                    email: teacher.email || '',
-                                    phone: teacher.phone || '',
+                                    password: '',
                                   });
                                   setShowTeacherDialog(true);
                                 }}
