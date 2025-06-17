@@ -161,8 +161,13 @@ const NewAdminDashboard = () => {
           title: "Başarılı",
           description: "Öğretmen bilgileri güncellendi.",
         });
-      } else {
-        const { error } = await createTeacher(newTeacher.name, newTeacher.password || 'defaultPassword123');
+      } else {        const { error } = await createTeacher({
+          name: newTeacher.name,
+          password: newTeacher.password || 'defaultPassword123',
+          is_first_login: true,
+          login_attempts: 0,
+          locked_until: null
+        });
         if (error) throw error;
         
         toast({
