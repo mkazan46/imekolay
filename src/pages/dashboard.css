@@ -1,0 +1,32 @@
+/* Custom breakpoint for extra small devices */
+@media (max-width: 480px) {
+  .xs\:hidden {
+    display: none;
+  }
+  
+  .xs\:inline {
+    display: inline;
+  }
+  
+  .xs\:block {
+    display: block;
+  }
+
+  .xs\:flex {
+    display: flex;
+  }
+}
+
+@media (min-width: 481px) {
+  .hidden.xs\:inline {
+    display: inline;
+  }
+  
+  .hidden.xs\:block {
+    display: block;
+  }
+  
+  .hidden.xs\:flex {
+    display: flex;
+  }
+} 

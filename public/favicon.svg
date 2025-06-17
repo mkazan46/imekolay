@@ -1,0 +1,16 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 32 32" fill="none">
+  <!-- Okul binası ikonu -->
+  <rect width="32" height="32" fill="none"/>
+  <!-- Bina çatısı -->
+  <polygon points="16,4 28,12 4,12" fill="#3b5998" stroke="#2c3e50" stroke-width="1.5"/>
+  <!-- Bina gövdesi -->
+  <rect x="6" y="12" width="20" height="14" fill="#f0f2f5" stroke="#2c3e50" stroke-width="1.5"/>
+  <!-- Orta bölüm giriş kapısı -->
+  <rect x="13" y="20" width="6" height="6" fill="#2c3e50"/>
+  <!-- Pencereler -->
+  <rect x="9" y="15" width="3" height="3" fill="#3b5998"/>
+  <rect x="20" y="15" width="3" height="3" fill="#3b5998"/>
+  <!-- Çatı detayı -->
+  <line x1="16" y1="4" x2="16" y2="9" stroke="#2c3e50" stroke-width="1.5"/>
+  <circle cx="16" cy="10" r="1" fill="#2c3e50"/>
+</svg> 
