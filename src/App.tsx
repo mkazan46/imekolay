@@ -7,7 +7,7 @@ import { ReactNode, useEffect } from "react";
 import Index from "./pages/Index";
 import Dashboard from "./pages/Dashboard";
 import AdminLogin from "./pages/AdminLogin";
-import AdminDashboard from "./pages/AdminDashboard";
+import NewAdminDashboard from "./pages/NewAdminDashboard";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -74,7 +74,7 @@ const App = () => (
             path="/admin" 
             element={
               <ProtectedRoute isAdmin>
-                <AdminDashboard />
+                <NewAdminDashboard />
               </ProtectedRoute>
             } 
           />
