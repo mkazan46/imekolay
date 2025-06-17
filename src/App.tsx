@@ -7,6 +7,7 @@ import { ReactNode, useEffect } from "react";
 import Index from "./pages/Index";
 import Dashboard from "./pages/Dashboard";
 import AdminLogin from "./pages/AdminLogin";
+import AdminDashboard from "./pages/AdminDashboard";
 import NewAdminDashboard from "./pages/NewAdminDashboard";
 import NotFound from "./pages/NotFound";
 
@@ -72,6 +73,14 @@ const App = () => (
           {/* Admin Kontrol Paneli - Admin girişi yapılmış olmalı */}
           <Route 
             path="/admin" 
+            element={
+              <ProtectedRoute isAdmin>
+                <AdminDashboard />
+              </ProtectedRoute>
+            } 
+          />
+          <Route 
+            path="/new-admin" 
             element={
               <ProtectedRoute isAdmin>
                 <NewAdminDashboard />

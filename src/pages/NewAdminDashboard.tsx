@@ -1,48 +1,38 @@
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { useToast } from '@/hooks/use-toast';
-import {
-  getTeachers,
-  createTeacher,
-  updateTeacher,
-  deleteTeacher,
-  getBusinesses,
-  getGovernmentSupport,
-  createDevletDestegi,
-  updateDevletDestegi,
-  deleteDevletDestegi,
-  Teacher,
-  Business,
-  DevletDestegi,
-} from '@/lib/supabase';
-
-// UI Components
-import { Button } from "@/components/ui/button";
+import { 
+  Users, 
+  Building2, 
+  FileText, 
+  Award, 
+  BarChart3,
+  Settings,
+  LogOut,
+  Search,
+  Plus,
+  Edit,
+  Trash2,
+  Download,
+  Upload,
+  ChevronRight,
+  Calendar,
+  TrendingUp,
+  UserCheck,
+  AlertCircle,
+  CheckCircle2,
+  Clock,
+  Filter,
+  MoreVertical,
+  Home,
+  Bell,
+  Shield
+} from "lucide-react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Badge } from "@/components/ui/badge";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
-import { Separator } from "@/components/ui/separator";
-import { ScrollArea } from "@/components/ui/scroll-area";
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-  DialogTrigger,
-} from "@/components/ui/dialog";
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "@/components/ui/table";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -51,624 +41,399 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-
-// Icons
-import {
-  Users,
-  Building,
-  DollarSign,
-  BarChart3,
-  Plus,
-  Search,
-  MoreHorizontal,
-  Edit,
-  Trash2,
-  LogOut,
-  Menu,
-  X,
-  Home,
-  Settings,
-  FileText,
-  Award,
-  Bell,
-  User,
-  Calendar,
-  TrendingUp,
-  Shield,
-  ChevronRight,
-} from "lucide-react";
-
-interface AdminStats {
-  totalTeachers: number;
-  totalBusinesses: number;
-  totalSupport: number;
-  activeAssignments: number;
-}
+import { useToast } from '@/hooks/use-toast';
 
 const NewAdminDashboard = () => {
+  const [activeTab, setActiveTab] = useState("overview");
+  const [searchTerm, setSearchTerm] = useState("");
   const navigate = useNavigate();
   const { toast } = useToast();
-  
-  // States
-  const [sidebarOpen, setSidebarOpen] = useState(true);
-  const [activeTab, setActiveTab] = useState('dashboard');
-  const [loading, setLoading] = useState(true);
-  const [stats, setStats] = useState<AdminStats>({
-    totalTeachers: 0,
-    totalBusinesses: 0,
-    totalSupport: 0,
-    activeAssignments: 0,
-  });
-  
-  const [teachers, setTeachers] = useState<Teacher[]>([]);
-  const [businesses, setBusinesses] = useState<Business[]>([]);
-  const [governmentSupport, setGovernmentSupport] = useState<DevletDestegi[]>([]);
-    // Form states
-  const [searchTerm, setSearchTerm] = useState('');
-  const [newTeacher, setNewTeacher] = useState({ name: '', password: '' });
-  const [editingTeacher, setEditingTeacher] = useState<Teacher | null>(null);
-  const [showTeacherDialog, setShowTeacherDialog] = useState(false);
 
-  // Load data
-  useEffect(() => {
-    loadData();
-  }, []);
-
-  const loadData = async () => {
-    try {
-      setLoading(true);
-      
-      // Load all data in parallel
-      const [teachersRes, businessesRes, supportRes] = await Promise.all([
-        getTeachers(),
-        getBusinesses(),
-        getGovernmentSupport(),
-      ]);
-
-      if (teachersRes.data) setTeachers(teachersRes.data);
-      if (businessesRes.data) setBusinesses(businessesRes.data);
-      if (supportRes.data) setGovernmentSupport(supportRes.data);
-
-      // Calculate stats
-      setStats({
-        totalTeachers: teachersRes.data?.length || 0,
-        totalBusinesses: businessesRes.data?.length || 0,
-        totalSupport: supportRes.data?.reduce((sum, item) => sum + (item.tutar || 0), 0) || 0,
-        activeAssignments: businessesRes.data?.filter(b => b.atanan_ogretmenler).length || 0,
-      });
-
-    } catch (error) {
-      console.error('Error loading data:', error);
-      toast({
-        title: "Hata",
-        description: "Veriler yüklenirken bir hata oluştu.",
-        variant: "destructive",
-      });
-    } finally {
-      setLoading(false);
-    }
-  };
-  // Handle teacher operations
-  const handleSaveTeacher = async () => {
-    try {
-      if (editingTeacher) {
-        const { error } = await updateTeacher(editingTeacher.id, {
-          name: newTeacher.name,
-        });
-        if (error) throw error;
-        
-        toast({
-          title: "Başarılı",
-          description: "Öğretmen bilgileri güncellendi.",
-        });
-      } else {        const { error } = await createTeacher({
-          name: newTeacher.name,
-          password: newTeacher.password || 'defaultPassword123',
-          is_first_login: true,
-          login_attempts: 0,
-          locked_until: null
-        });
-        if (error) throw error;
-        
-        toast({
-          title: "Başarılı",
-          description: "Yeni öğretmen eklendi.",
-        });
-      }
-      
-      setShowTeacherDialog(false);
-      setEditingTeacher(null);
-      setNewTeacher({ name: '', password: '' });
-      loadData();
-    } catch (error) {
-      console.error('Error saving teacher:', error);
-      toast({
-        title: "Hata",
-        description: "İşlem sırasında bir hata oluştu.",
-        variant: "destructive",
-      });
-    }
-  };
-  const handleDeleteTeacher = async (teacherId: string) => {
-    try {
-      const { error } = await deleteTeacher(teacherId);
-      if (error) throw error;
-      
-      toast({
-        title: "Başarılı",
-        description: "Öğretmen silindi.",
-      });
-      loadData();
-    } catch (error) {
-      console.error('Error deleting teacher:', error);
-      toast({
-        title: "Hata",
-        description: "Silme işlemi sırasında bir hata oluştu.",
-        variant: "destructive",
-      });
-    }
+  // Mock data - gerçek verilerle değiştirilecek
+  const stats = {
+    totalTeachers: 42,
+    activeBusinesses: 128,
+    completedDocuments: 256,
+    pendingSupports: 18,
+    monthlyGrowth: 12.5
   };
 
   const handleLogout = () => {
-    sessionStorage.removeItem('isAdmin');
-    sessionStorage.removeItem('adminData');
+    sessionStorage.clear();
     navigate('/admin-login');
   };
-  // Filter data based on search
-  const filteredTeachers = teachers.filter(teacher =>
-    teacher.name.toLowerCase().includes(searchTerm.toLowerCase())
-  );
-
-  const filteredBusinesses = businesses.filter(business =>
-    business.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    business.address?.toLowerCase().includes(searchTerm.toLowerCase())
-  );
-
-  // Sidebar navigation items
-  const navigationItems = [
-    { id: 'dashboard', label: 'Dashboard', icon: Home },
-    { id: 'teachers', label: 'Öğretmenler', icon: Users },
-    { id: 'businesses', label: 'İşletmeler', icon: Building },
-    { id: 'support', label: 'Devlet Desteği', icon: Award },
-    { id: 'reports', label: 'Raporlar', icon: FileText },
-    { id: 'settings', label: 'Ayarlar', icon: Settings },
-  ];
 
   return (
-    <div className="flex h-screen bg-gray-50">
-      {/* Sidebar */}
-      <div className={`${sidebarOpen ? 'w-64' : 'w-16'} bg-white shadow-lg transition-all duration-300 flex flex-col`}>
-        {/* Sidebar Header */}
-        <div className="p-4 border-b border-gray-200">
+    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-50">
+      {/* Modern Header */}
+      <header className="border-b bg-white/80 backdrop-blur-lg sticky top-0 z-50 shadow-sm">
+        <div className="container mx-auto px-6 py-4">
           <div className="flex items-center justify-between">
-            {sidebarOpen && (
-              <div className="flex items-center space-x-3">
-                <div className="w-8 h-8 bg-blue-600 rounded-lg flex items-center justify-center">
-                  <Shield className="w-5 h-5 text-white" />
-                </div>
-                <div>
-                  <h1 className="font-bold text-lg text-gray-900">Admin Panel</h1>
-                  <p className="text-xs text-gray-500">Dekont Takip Sistemi</p>
-                </div>
+            {/* Logo & Title */}
+            <div className="flex items-center space-x-4">
+              <div className="w-10 h-10 bg-gradient-to-br from-blue-600 to-indigo-600 rounded-xl flex items-center justify-center shadow-lg">
+                <Shield className="w-6 h-6 text-white" />
               </div>
-            )}
-            <Button
-              variant="ghost"
-              size="sm"
-              onClick={() => setSidebarOpen(!sidebarOpen)}
-              className="p-1.5"
-            >
-              {sidebarOpen ? <X className="w-4 h-4" /> : <Menu className="w-4 h-4" />}
-            </Button>
+              <div>
+                <h1 className="text-2xl font-bold bg-gradient-to-r from-gray-900 to-gray-600 bg-clip-text text-transparent">
+                  Admin Paneli
+                </h1>
+                <p className="text-sm text-gray-500">Dekont Takip Sistemi</p>
+              </div>
+            </div>
+
+            {/* Header Actions */}
+            <div className="flex items-center space-x-4">
+              {/* Search */}
+              <div className="relative hidden md:block">
+                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" />
+                <Input
+                  placeholder="Arama yapın..."
+                  value={searchTerm}
+                  onChange={(e) => setSearchTerm(e.target.value)}
+                  className="pl-10 pr-4 w-80 bg-gray-50 border-gray-200 focus:bg-white transition-colors"
+                />
+              </div>
+
+              {/* Notifications */}
+              <Button variant="ghost" size="icon" className="relative">
+                <Bell className="w-5 h-5" />
+                <span className="absolute -top-1 -right-1 w-3 h-3 bg-red-500 rounded-full text-xs flex items-center justify-center">
+                  <span className="w-1 h-1 bg-white rounded-full"></span>
+                </span>
+              </Button>
+
+              {/* User Menu */}
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <Button variant="ghost" className="flex items-center space-x-2 p-2">
+                    <Avatar className="w-8 h-8">
+                      <AvatarFallback className="bg-gradient-to-br from-blue-500 to-indigo-500 text-white font-medium">
+                        A
+                      </AvatarFallback>
+                    </Avatar>
+                    <span className="hidden md:block font-medium">Admin</span>
+                  </Button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align="end" className="w-56">
+                  <DropdownMenuLabel>Hesabım</DropdownMenuLabel>
+                  <DropdownMenuSeparator />
+                  <DropdownMenuItem>
+                    <Settings className="mr-2 h-4 w-4" />
+                    Ayarlar
+                  </DropdownMenuItem>
+                  <DropdownMenuSeparator />
+                  <DropdownMenuItem onClick={handleLogout} className="text-red-600">
+                    <LogOut className="mr-2 h-4 w-4" />
+                    Çıkış Yap
+                  </DropdownMenuItem>
+                </DropdownMenuContent>
+              </DropdownMenu>
+            </div>
           </div>
         </div>
-
-        {/* Navigation */}
-        <nav className="flex-1 p-4">
-          <ul className="space-y-2">
-            {navigationItems.map((item) => {
-              const Icon = item.icon;
-              return (
-                <li key={item.id}>
-                  <button
-                    onClick={() => setActiveTab(item.id)}
-                    className={`w-full flex items-center space-x-3 px-3 py-2.5 rounded-lg transition-colors text-left ${
-                      activeTab === item.id
-                        ? 'bg-blue-50 text-blue-700 border border-blue-200'
-                        : 'text-gray-700 hover:bg-gray-100'
-                    }`}
-                  >
-                    <Icon className="w-5 h-5 flex-shrink-0" />
-                    {sidebarOpen && (
-                      <span className="font-medium">{item.label}</span>
-                    )}
-                  </button>
-                </li>
-              );
-            })}
-          </ul>
-        </nav>
-
-        {/* User Menu */}
-        <div className="p-4 border-t border-gray-200">
-          <DropdownMenu>
-            <DropdownMenuTrigger asChild>
-              <Button variant="ghost" className="w-full justify-start space-x-3 p-3">
-                <Avatar className="w-8 h-8">
-                  <AvatarFallback className="bg-blue-100 text-blue-700">
-                    A
-                  </AvatarFallback>
-                </Avatar>
-                {sidebarOpen && (
-                  <div className="flex-1 text-left">
-                    <p className="font-medium text-sm text-gray-900">Admin</p>
-                    <p className="text-xs text-gray-500">admin@dekonttakip.com</p>
-                  </div>
-                )}
-              </Button>
-            </DropdownMenuTrigger>
-            <DropdownMenuContent align="end" className="w-56">
-              <DropdownMenuLabel>Hesabım</DropdownMenuLabel>
-              <DropdownMenuSeparator />
-              <DropdownMenuItem>
-                <User className="mr-2 h-4 w-4" />
-                Profil
-              </DropdownMenuItem>
-              <DropdownMenuItem>
-                <Settings className="mr-2 h-4 w-4" />
-                Ayarlar
-              </DropdownMenuItem>
-              <DropdownMenuSeparator />
-              <DropdownMenuItem onClick={handleLogout} className="text-red-600">
-                <LogOut className="mr-2 h-4 w-4" />
-                Çıkış Yap
-              </DropdownMenuItem>
-            </DropdownMenuContent>
-          </DropdownMenu>
-        </div>
-      </div>
+      </header>
 
       {/* Main Content */}
-      <div className="flex-1 flex flex-col overflow-hidden">
-        {/* Top Header */}
-        <header className="bg-white shadow-sm border-b border-gray-200 px-6 py-4">
-          <div className="flex items-center justify-between">
-            <div>
-              <h1 className="text-2xl font-bold text-gray-900">
-                {navigationItems.find(item => item.id === activeTab)?.label || 'Dashboard'}
-              </h1>
-              <p className="text-gray-600 mt-1">
-                {activeTab === 'dashboard' && 'Sistem durumu ve genel bakış'}
-                {activeTab === 'teachers' && 'Öğretmen yönetimi ve atamaları'}
-                {activeTab === 'businesses' && 'İşletme kayıtları ve bilgileri'}
-                {activeTab === 'support' && 'Devlet desteği ödemeleri'}
-                {activeTab === 'reports' && 'Sistem raporları ve analitik'}
-                {activeTab === 'settings' && 'Sistem ayarları ve yapılandırma'}
-              </p>
-            </div>
-            <div className="flex items-center space-x-4">
-              <Button variant="outline" size="sm">
-                <Bell className="w-4 h-4 mr-2" />
-                Bildirimler
-              </Button>
-              <Button size="sm">
-                <Plus className="w-4 h-4 mr-2" />
-                Yeni Ekle
-              </Button>
-            </div>
-          </div>
-        </header>
+      <main className="container mx-auto px-6 py-8">
+        <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-8">
+          {/* Modern Tab Navigation */}
+          <TabsList className="grid w-full grid-cols-5 lg:w-fit lg:grid-cols-5 bg-white p-1 shadow-sm border">
+            <TabsTrigger 
+              value="overview" 
+              className="flex items-center space-x-2 data-[state=active]:bg-gradient-to-r data-[state=active]:from-blue-500 data-[state=active]:to-indigo-500 data-[state=active]:text-white"
+            >
+              <Home className="w-4 h-4" />
+              <span className="hidden sm:block">Genel Bakış</span>
+            </TabsTrigger>
+            <TabsTrigger 
+              value="teachers"
+              className="flex items-center space-x-2 data-[state=active]:bg-gradient-to-r data-[state=active]:from-blue-500 data-[state=active]:to-indigo-500 data-[state=active]:text-white"
+            >
+              <Users className="w-4 h-4" />
+              <span className="hidden sm:block">Öğretmenler</span>
+            </TabsTrigger>
+            <TabsTrigger 
+              value="businesses"
+              className="flex items-center space-x-2 data-[state=active]:bg-gradient-to-r data-[state=active]:from-blue-500 data-[state=active]:to-indigo-500 data-[state=active]:text-white"
+            >
+              <Building2 className="w-4 h-4" />
+              <span className="hidden sm:block">İşletmeler</span>
+            </TabsTrigger>
+            <TabsTrigger 
+              value="documents"
+              className="flex items-center space-x-2 data-[state=active]:bg-gradient-to-r data-[state=active]:from-blue-500 data-[state=active]:to-indigo-500 data-[state=active]:text-white"
+            >
+              <FileText className="w-4 h-4" />
+              <span className="hidden sm:block">Evraklar</span>
+            </TabsTrigger>
+            <TabsTrigger 
+              value="reports"
+              className="flex items-center space-x-2 data-[state=active]:bg-gradient-to-r data-[state=active]:from-blue-500 data-[state=active]:to-indigo-500 data-[state=active]:text-white"
+            >
+              <BarChart3 className="w-4 h-4" />
+              <span className="hidden sm:block">Raporlar</span>
+            </TabsTrigger>
+          </TabsList>
 
-        {/* Content Area */}
-        <main className="flex-1 overflow-auto bg-gray-50">
-          {/* Dashboard Tab */}
-          {activeTab === 'dashboard' && (
-            <div className="p-6 space-y-6">
-              {/* Stats Cards */}
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-                <Card className="p-6">
-                  <div className="flex items-center justify-between">
-                    <div>
-                      <p className="text-sm font-medium text-gray-600">Toplam Öğretmen</p>
-                      <p className="text-3xl font-bold text-gray-900">{stats.totalTeachers}</p>
-                      <p className="text-xs text-green-600 mt-1">+12% bu ay</p>
-                    </div>
-                    <div className="w-12 h-12 bg-blue-50 rounded-lg flex items-center justify-center">
-                      <Users className="w-6 h-6 text-blue-600" />
-                    </div>
-                  </div>
-                </Card>
-
-                <Card className="p-6">
-                  <div className="flex items-center justify-between">
-                    <div>
-                      <p className="text-sm font-medium text-gray-600">Aktif İşletme</p>
-                      <p className="text-3xl font-bold text-gray-900">{stats.totalBusinesses}</p>
-                      <p className="text-xs text-green-600 mt-1">+8% bu ay</p>
-                    </div>
-                    <div className="w-12 h-12 bg-green-50 rounded-lg flex items-center justify-center">
-                      <Building className="w-6 h-6 text-green-600" />
-                    </div>
-                  </div>
-                </Card>
-
-                <Card className="p-6">
-                  <div className="flex items-center justify-between">
-                    <div>
-                      <p className="text-sm font-medium text-gray-600">Toplam Destek</p>
-                      <p className="text-3xl font-bold text-gray-900">₺{stats.totalSupport.toLocaleString()}</p>
-                      <p className="text-xs text-green-600 mt-1">+23% bu ay</p>
-                    </div>
-                    <div className="w-12 h-12 bg-yellow-50 rounded-lg flex items-center justify-center">
-                      <DollarSign className="w-6 h-6 text-yellow-600" />
-                    </div>
-                  </div>
-                </Card>
-
-                <Card className="p-6">
-                  <div className="flex items-center justify-between">
-                    <div>
-                      <p className="text-sm font-medium text-gray-600">Aktif Atama</p>
-                      <p className="text-3xl font-bold text-gray-900">{stats.activeAssignments}</p>
-                      <p className="text-xs text-blue-600 mt-1">%{((stats.activeAssignments / stats.totalBusinesses) * 100).toFixed(1)} oranı</p>
-                    </div>
-                    <div className="w-12 h-12 bg-purple-50 rounded-lg flex items-center justify-center">
-                      <TrendingUp className="w-6 h-6 text-purple-600" />
-                    </div>
-                  </div>
-                </Card>
+          {/* Overview Tab */}
+          <TabsContent value="overview" className="space-y-8">
+            {/* Welcome Section */}
+            <div className="bg-gradient-to-r from-blue-600 via-indigo-600 to-purple-600 rounded-2xl p-8 text-white relative overflow-hidden">
+              <div className="absolute inset-0 bg-black/10"></div>
+              <div className="relative z-10">
+                <h2 className="text-3xl font-bold mb-2">Hoş Geldiniz! 👋</h2>
+                <p className="text-blue-100 text-lg mb-6">
+                  Sistem durumunuz ve güncel istatistikleriniz
+                </p>
+                <div className="flex items-center space-x-4">
+                  <Badge variant="secondary" className="bg-white/20 text-white border-white/30">
+                    <TrendingUp className="w-4 h-4 mr-1" />
+                    +{stats.monthlyGrowth}% bu ay
+                  </Badge>
+                  <Badge variant="secondary" className="bg-white/20 text-white border-white/30">
+                    <Calendar className="w-4 h-4 mr-1" />
+                    {new Date().toLocaleDateString('tr-TR')}
+                  </Badge>
+                </div>
               </div>
+              {/* Decorative Elements */}
+              <div className="absolute -top-4 -right-4 w-24 h-24 bg-white/10 rounded-full"></div>
+              <div className="absolute top-20 -right-8 w-16 h-16 bg-white/5 rounded-full"></div>
+            </div>
 
+            {/* Stats Grid */}
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+              <Card className="border-0 shadow-lg bg-gradient-to-br from-blue-50 to-indigo-50 hover:shadow-xl transition-all duration-300">
+                <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                  <CardTitle className="text-sm font-medium text-gray-600">
+                    Toplam Öğretmen
+                  </CardTitle>
+                  <div className="w-10 h-10 bg-gradient-to-br from-blue-500 to-blue-600 rounded-lg flex items-center justify-center">
+                    <Users className="h-5 w-5 text-white" />
+                  </div>
+                </CardHeader>
+                <CardContent>
+                  <div className="text-3xl font-bold text-gray-900">{stats.totalTeachers}</div>
+                  <p className="text-xs text-green-600 flex items-center mt-1">
+                    <TrendingUp className="w-3 h-3 mr-1" />
+                    +5 bu ay
+                  </p>
+                </CardContent>
+              </Card>
+
+              <Card className="border-0 shadow-lg bg-gradient-to-br from-emerald-50 to-green-50 hover:shadow-xl transition-all duration-300">
+                <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                  <CardTitle className="text-sm font-medium text-gray-600">
+                    Aktif İşletme
+                  </CardTitle>
+                  <div className="w-10 h-10 bg-gradient-to-br from-emerald-500 to-green-600 rounded-lg flex items-center justify-center">
+                    <Building2 className="h-5 w-5 text-white" />
+                  </div>
+                </CardHeader>
+                <CardContent>
+                  <div className="text-3xl font-bold text-gray-900">{stats.activeBusinesses}</div>
+                  <p className="text-xs text-green-600 flex items-center mt-1">
+                    <TrendingUp className="w-3 h-3 mr-1" />
+                    +12 bu ay
+                  </p>
+                </CardContent>
+              </Card>
+
+              <Card className="border-0 shadow-lg bg-gradient-to-br from-purple-50 to-violet-50 hover:shadow-xl transition-all duration-300">
+                <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                  <CardTitle className="text-sm font-medium text-gray-600">
+                    Tamamlanan Evrak
+                  </CardTitle>
+                  <div className="w-10 h-10 bg-gradient-to-br from-purple-500 to-violet-600 rounded-lg flex items-center justify-center">
+                    <CheckCircle2 className="h-5 w-5 text-white" />
+                  </div>
+                </CardHeader>
+                <CardContent>
+                  <div className="text-3xl font-bold text-gray-900">{stats.completedDocuments}</div>
+                  <p className="text-xs text-green-600 flex items-center mt-1">
+                    <TrendingUp className="w-3 h-3 mr-1" />
+                    +28 bu hafta
+                  </p>
+                </CardContent>
+              </Card>
+
+              <Card className="border-0 shadow-lg bg-gradient-to-br from-amber-50 to-orange-50 hover:shadow-xl transition-all duration-300">
+                <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                  <CardTitle className="text-sm font-medium text-gray-600">
+                    Bekleyen Destek
+                  </CardTitle>
+                  <div className="w-10 h-10 bg-gradient-to-br from-amber-500 to-orange-600 rounded-lg flex items-center justify-center">
+                    <Clock className="h-5 w-5 text-white" />
+                  </div>
+                </CardHeader>
+                <CardContent>
+                  <div className="text-3xl font-bold text-gray-900">{stats.pendingSupports}</div>
+                  <p className="text-xs text-orange-600 flex items-center mt-1">
+                    <AlertCircle className="w-3 h-3 mr-1" />
+                    İnceleme gerekli
+                  </p>
+                </CardContent>
+              </Card>
+            </div>
+
+            {/* Quick Actions */}
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
               {/* Recent Activities */}
-              <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-                <Card>
-                  <CardHeader>
-                    <CardTitle className="flex items-center space-x-2">
-                      <Calendar className="w-5 h-5" />
-                      <span>Son Aktiviteler</span>
-                    </CardTitle>
-                  </CardHeader>
-                  <CardContent>
-                    <div className="space-y-4">
-                      {[1, 2, 3, 4].map((item) => (
-                        <div key={item} className="flex items-center space-x-3 p-3 rounded-lg bg-gray-50">
-                          <div className="w-2 h-2 bg-blue-500 rounded-full"></div>
-                          <div className="flex-1">
-                            <p className="text-sm font-medium text-gray-900">Yeni öğretmen eklendi</p>
-                            <p className="text-xs text-gray-500">2 saat önce</p>
-                          </div>
-                        </div>
-                      ))}
+              <Card className="border-0 shadow-lg">
+                <CardHeader>
+                  <CardTitle className="flex items-center space-x-2">
+                    <div className="w-2 h-2 bg-blue-500 rounded-full animate-pulse"></div>
+                    <span>Son Aktiviteler</span>
+                  </CardTitle>
+                  <CardDescription>
+                    Sistemdeki en son gerçekleştirilen işlemler
+                  </CardDescription>
+                </CardHeader>
+                <CardContent className="space-y-4">
+                  {[
+                    { action: "Yeni öğretmen eklendi", user: "Ahmet Yılmaz", time: "5 dk önce", type: "user" },
+                    { action: "İşletme güncellendi", user: "Mehmet A.Ş.", time: "12 dk önce", type: "business" },
+                    { action: "Evrak teslim edildi", user: "Ayşe Kaya", time: "1 saat önce", type: "document" },
+                    { action: "Destek onaylandı", user: "Fatma Ltd.", time: "2 saat önce", type: "support" }
+                  ].map((activity, index) => (
+                    <div key={index} className="flex items-center space-x-3 p-3 rounded-lg bg-gray-50 hover:bg-gray-100 transition-colors">
+                      <div className={`w-8 h-8 rounded-full flex items-center justify-center ${
+                        activity.type === 'user' ? 'bg-blue-100 text-blue-600' :
+                        activity.type === 'business' ? 'bg-green-100 text-green-600' :
+                        activity.type === 'document' ? 'bg-purple-100 text-purple-600' :
+                        'bg-orange-100 text-orange-600'
+                      }`}>
+                        {activity.type === 'user' ? <UserCheck className="w-4 h-4" /> :
+                         activity.type === 'business' ? <Building2 className="w-4 h-4" /> :
+                         activity.type === 'document' ? <FileText className="w-4 h-4" /> :
+                         <Award className="w-4 h-4" />}
+                      </div>
+                      <div className="flex-1">
+                        <p className="text-sm font-medium text-gray-900">{activity.action}</p>
+                        <p className="text-xs text-gray-500">{activity.user} • {activity.time}</p>
+                      </div>
+                      <ChevronRight className="w-4 h-4 text-gray-400" />
                     </div>
-                  </CardContent>
-                </Card>
+                  ))}
+                </CardContent>
+              </Card>
 
-                <Card>
-                  <CardHeader>
-                    <CardTitle className="flex items-center space-x-2">
-                      <BarChart3 className="w-5 h-5" />
-                      <span>Hızlı İstatistikler</span>
-                    </CardTitle>
-                  </CardHeader>
-                  <CardContent>
-                    <div className="space-y-4">
-                      <div className="flex justify-between items-center">
-                        <span className="text-sm text-gray-600">Bu ay eklenen öğretmen</span>
-                        <Badge variant="secondary">12</Badge>
-                      </div>
-                      <div className="flex justify-between items-center">
-                        <span className="text-sm text-gray-600">Bekleyen ödemeler</span>
-                        <Badge variant="destructive">3</Badge>
-                      </div>
-                      <div className="flex justify-between items-center">
-                        <span className="text-sm text-gray-600">Tamamlanan atamalar</span>
-                        <Badge variant="default">{stats.activeAssignments}</Badge>
-                      </div>
-                      <div className="flex justify-between items-center">
-                        <span className="text-sm text-gray-600">Sistem durumu</span>
-                        <Badge variant="outline" className="text-green-600 border-green-600">Aktif</Badge>
-                      </div>
-                    </div>
-                  </CardContent>
-                </Card>
-              </div>
+              {/* Quick Actions */}
+              <Card className="border-0 shadow-lg">
+                <CardHeader>
+                  <CardTitle>Hızlı İşlemler</CardTitle>
+                  <CardDescription>
+                    Sık kullanılan işlemleri hızlıca gerçekleştirin
+                  </CardDescription>
+                </CardHeader>
+                <CardContent className="space-y-4">
+                  <Button 
+                    className="w-full justify-start bg-gradient-to-r from-blue-500 to-indigo-500 hover:from-blue-600 hover:to-indigo-600 text-white shadow-lg"
+                    onClick={() => setActiveTab("teachers")}
+                  >
+                    <Plus className="mr-2 h-4 w-4" />
+                    Yeni Öğretmen Ekle
+                  </Button>
+                  
+                  <Button 
+                    variant="outline" 
+                    className="w-full justify-start border-green-200 hover:bg-green-50"
+                    onClick={() => setActiveTab("businesses")}
+                  >
+                    <Building2 className="mr-2 h-4 w-4 text-green-600" />
+                    İşletme Yönet
+                  </Button>
+                  
+                  <Button 
+                    variant="outline" 
+                    className="w-full justify-start border-purple-200 hover:bg-purple-50"
+                    onClick={() => setActiveTab("documents")}
+                  >
+                    <Upload className="mr-2 h-4 w-4 text-purple-600" />
+                    Evrak Yükle
+                  </Button>
+                  
+                  <Button 
+                    variant="outline" 
+                    className="w-full justify-start border-orange-200 hover:bg-orange-50"
+                    onClick={() => setActiveTab("reports")}
+                  >
+                    <Download className="mr-2 h-4 w-4 text-orange-600" />
+                    Rapor İndir
+                  </Button>
+                </CardContent>
+              </Card>
             </div>
-          )}
+          </TabsContent>
 
           {/* Teachers Tab */}
-          {activeTab === 'teachers' && (
-            <div className="p-6 space-y-6">
-              {/* Teachers Header */}
-              <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center space-y-4 sm:space-y-0">
-                <div className="flex-1 max-w-md">
-                  <div className="relative">
-                    <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" />
-                    <Input
-                      placeholder="Öğretmen ara..."
-                      value={searchTerm}
-                      onChange={(e) => setSearchTerm(e.target.value)}
-                      className="pl-10"
-                    />
+          <TabsContent value="teachers" className="space-y-6">
+            <div className="flex items-center justify-between">
+              <div>
+                <h2 className="text-2xl font-bold text-gray-900">Öğretmen Yönetimi</h2>
+                <p className="text-gray-600">Öğretmenleri ekleyin, düzenleyin ve yönetin</p>
+              </div>
+              <Button className="bg-gradient-to-r from-blue-500 to-indigo-500 hover:from-blue-600 hover:to-indigo-600 text-white shadow-lg">
+                <Plus className="mr-2 h-4 w-4" />
+                Yeni Öğretmen
+              </Button>
+            </div>
+
+            <Card className="border-0 shadow-lg">
+              <CardHeader>
+                <div className="flex items-center justify-between">
+                  <CardTitle>Öğretmen Listesi</CardTitle>
+                  <div className="flex items-center space-x-2">
+                    <div className="relative">
+                      <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" />
+                      <Input
+                        placeholder="Öğretmen ara..."
+                        className="pl-10 w-64"
+                      />
+                    </div>
+                    <Button variant="outline" size="icon">
+                      <Filter className="h-4 w-4" />
+                    </Button>
                   </div>
                 </div>
-                <Dialog open={showTeacherDialog} onOpenChange={setShowTeacherDialog}>                  <DialogTrigger asChild>
-                    <Button onClick={() => {
-                      setEditingTeacher(null);
-                      setNewTeacher({ name: '', password: '' });
-                    }}>
-                      <Plus className="w-4 h-4 mr-2" />
-                      Yeni Öğretmen
-                    </Button>
-                  </DialogTrigger>
-                  <DialogContent className="sm:max-w-md">
-                    <DialogHeader>
-                      <DialogTitle>
-                        {editingTeacher ? 'Öğretmen Düzenle' : 'Yeni Öğretmen Ekle'}
-                      </DialogTitle>
-                      <DialogDescription>
-                        Öğretmen bilgilerini girin.
-                      </DialogDescription>
-                    </DialogHeader>                    <div className="space-y-4">
-                      <div>
-                        <Label htmlFor="name">Ad Soyad</Label>
-                        <Input
-                          id="name"
-                          value={newTeacher.name}
-                          onChange={(e) => setNewTeacher({ ...newTeacher, name: e.target.value })}
-                          placeholder="Öğretmen adı"
-                        />
-                      </div>
-                      <div>
-                        <Label htmlFor="password">Şifre</Label>
-                        <Input
-                          id="password"
-                          type="password"
-                          value={newTeacher.password}
-                          onChange={(e) => setNewTeacher({ ...newTeacher, password: e.target.value })}
-                          placeholder="Şifre"
-                        />
-                      </div>
-                    </div>
-                    <DialogFooter>
-                      <Button variant="outline" onClick={() => setShowTeacherDialog(false)}>
-                        İptal
-                      </Button>
-                      <Button onClick={handleSaveTeacher}>
-                        {editingTeacher ? 'Güncelle' : 'Ekle'}
-                      </Button>
-                    </DialogFooter>
-                  </DialogContent>
-                </Dialog>
-              </div>
+              </CardHeader>
+              <CardContent>
+                <div className="text-center py-12">
+                  <Users className="mx-auto h-12 w-12 text-gray-400 mb-4" />
+                  <h3 className="text-lg font-medium text-gray-900 mb-2">Öğretmen verisi yükleniyor...</h3>
+                  <p className="text-gray-500">Bu sekme henüz aktif değil. Mevcut AdminDashboard işlevselliği kullanılacak.</p>
+                </div>
+              </CardContent>
+            </Card>
+          </TabsContent>
 
-              {/* Teachers Table */}
-              <Card>
-                <Table>                  <TableHeader>
-                    <TableRow>
-                      <TableHead>Öğretmen</TableHead>
-                      <TableHead>ID</TableHead>
-                      <TableHead>Giriş Durumu</TableHead>
-                      <TableHead>Atama Durumu</TableHead>
-                      <TableHead className="text-right">İşlemler</TableHead>
-                    </TableRow>
-                  </TableHeader>
-                  <TableBody>
-                    {filteredTeachers.map((teacher) => (                      <TableRow key={teacher.id}>
-                        <TableCell className="font-medium">
-                          <div className="flex items-center space-x-3">
-                            <Avatar className="w-8 h-8">
-                              <AvatarFallback>
-                                {teacher.name.split(' ').map(n => n[0]).join('').substring(0, 2)}
-                              </AvatarFallback>
-                            </Avatar>
-                            <span>{teacher.name}</span>
-                          </div>
-                        </TableCell>
-                        <TableCell className="text-gray-600">{teacher.id}</TableCell>
-                        <TableCell>
-                          <Badge variant={teacher.is_first_login ? "destructive" : "default"}>
-                            {teacher.is_first_login ? "İlk Giriş" : "Aktif"}
-                          </Badge>
-                        </TableCell>
-                        <TableCell>
-                          <Badge variant="outline">Atanmış</Badge>
-                        </TableCell>
-                        <TableCell className="text-right">
-                          <DropdownMenu>
-                            <DropdownMenuTrigger asChild>
-                              <Button variant="ghost" size="sm">
-                                <MoreHorizontal className="w-4 h-4" />
-                              </Button>
-                            </DropdownMenuTrigger>
-                            <DropdownMenuContent align="end">                              <DropdownMenuItem
-                                onClick={() => {
-                                  setEditingTeacher(teacher);
-                                  setNewTeacher({
-                                    name: teacher.name,
-                                    password: '',
-                                  });
-                                  setShowTeacherDialog(true);
-                                }}
-                              >
-                                <Edit className="mr-2 h-4 w-4" />
-                                Düzenle
-                              </DropdownMenuItem>
-                              <DropdownMenuItem
-                                onClick={() => handleDeleteTeacher(teacher.id)}
-                                className="text-red-600"
-                              >
-                                <Trash2 className="mr-2 h-4 w-4" />
-                                Sil
-                              </DropdownMenuItem>
-                            </DropdownMenuContent>
-                          </DropdownMenu>
-                        </TableCell>
-                      </TableRow>
-                    ))}
-                  </TableBody>
-                </Table>
-              </Card>
+          {/* Other tabs with similar structure */}
+          <TabsContent value="businesses" className="space-y-6">
+            <div className="text-center py-12">
+              <Building2 className="mx-auto h-12 w-12 text-gray-400 mb-4" />
+              <h3 className="text-lg font-medium text-gray-900 mb-2">İşletme Yönetimi</h3>
+              <p className="text-gray-500">Bu sekme henüz aktif değil. Mevcut AdminDashboard işlevselliği kullanılacak.</p>
             </div>
-          )}
+          </TabsContent>
 
-          {/* Other tabs content would go here... */}
-          {activeTab === 'businesses' && (
-            <div className="p-6">
-              <Card>
-                <CardHeader>
-                  <CardTitle>İşletmeler</CardTitle>
-                  <CardDescription>Kayıtlı işletmelerin listesi</CardDescription>
-                </CardHeader>
-                <CardContent>
-                  <p className="text-gray-500">İşletmeler bölümü yakında eklenecek...</p>
-                </CardContent>
-              </Card>
+          <TabsContent value="documents" className="space-y-6">
+            <div className="text-center py-12">
+              <FileText className="mx-auto h-12 w-12 text-gray-400 mb-4" />
+              <h3 className="text-lg font-medium text-gray-900 mb-2">Evrak Yönetimi</h3>
+              <p className="text-gray-500">Bu sekme henüz aktif değil. Mevcut AdminDashboard işlevselliği kullanılacak.</p>
             </div>
-          )}
+          </TabsContent>
 
-          {activeTab === 'support' && (
-            <div className="p-6">
-              <Card>
-                <CardHeader>
-                  <CardTitle>Devlet Desteği</CardTitle>
-                  <CardDescription>Destek ödemelerinin yönetimi</CardDescription>
-                </CardHeader>
-                <CardContent>
-                  <p className="text-gray-500">Devlet desteği bölümü yakında eklenecek...</p>
-                </CardContent>
-              </Card>
+          <TabsContent value="reports" className="space-y-6">
+            <div className="text-center py-12">
+              <BarChart3 className="mx-auto h-12 w-12 text-gray-400 mb-4" />
+              <h3 className="text-lg font-medium text-gray-900 mb-2">Raporlar</h3>
+              <p className="text-gray-500">Bu sekme henüz aktif değil. Mevcut AdminDashboard işlevselliği kullanılacak.</p>
             </div>
-          )}
-
-          {activeTab === 'reports' && (
-            <div className="p-6">
-              <Card>
-                <CardHeader>
-                  <CardTitle>Raporlar</CardTitle>
-                  <CardDescription>Sistem raporları ve analizler</CardDescription>
-                </CardHeader>
-                <CardContent>
-                  <p className="text-gray-500">Raporlar bölümü yakında eklenecek...</p>
-                </CardContent>
-              </Card>
-            </div>
-          )}
-
-          {activeTab === 'settings' && (
-            <div className="p-6">
-              <Card>
-                <CardHeader>
-                  <CardTitle>Ayarlar</CardTitle>
-                  <CardDescription>Sistem ayarları ve yapılandırma</CardDescription>
-                </CardHeader>
-                <CardContent>
-                  <p className="text-gray-500">Ayarlar bölümü yakında eklenecek...</p>
-                </CardContent>
-              </Card>
-            </div>
-          )}
-        </main>
-      </div>
+          </TabsContent>
+        </Tabs>
+      </main>
     </div>
   );
 };
