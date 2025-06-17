@@ -76,7 +76,6 @@ import {
   ChevronLeft,
 } from "lucide-react";
 import { useNavigate } from 'react-router-dom';
-import { DragDropContext, Droppable, Draggable } from 'react-beautiful-dnd';
 import { 
   Select,
   SelectContent,
